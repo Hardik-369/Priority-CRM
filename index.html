@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority CRM - Local-First Contact Management</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Ccircle cx='16' cy='16' r='15' fill='white' stroke='black' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2' fill='black'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='black'/%3E%3Ccircle cx='24' cy='8' r='1.5' fill='black'/%3E%3Ccircle cx='8' cy='24' r='1.5' fill='black'/%3E%3Ccircle cx='24' cy='24' r='1.5' fill='black'/%3E%3C/svg%3E">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom styles for professional SaaS look */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .card-hover {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .priority-high {
+            border-left: 4px solid #dc2626; /* Red */
+        }
+        
+        .priority-medium {
+            border-left: 4px solid #d97706; /* Yellow/Orange */
+        }
+        
+        .priority-low {
+            border-left: 4px solid #2563eb; /* Blue */
+        }
+        
+        /* Mobile responsive improvements */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .flex-col-mobile {
+                flex-direction: column;
+            }
+            
+            .space-x-mobile > * + * {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+        }
+        
+        .focus-mode-overlay {
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-white text-black min-h-screen">
+    <!-- Header -->
+    <header class="bg-black text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-users text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Priority CRM</h1>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                    <button id="completedDealsBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors w-full sm:w-auto">
+                        <i class="fas fa-trophy mr-2"></i>Completed Deals
+                    </button>
+                    <button id="focusModeBtn" class="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors w-full sm:w-auto">
+                        <i class="fas fa-bullseye mr-2"></i>Focus Mode
+                    </button>
+                    <button id="addContactBtn" class="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors w-full sm:w-auto">
+                        <i class="fas fa-plus mr-2"></i>Add Contact
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Dashboard Controls -->
+        <div class="mb-8 bg-gray-50 p-6 rounded-lg border">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <!-- Search Bar -->
+                <div class="relative flex-1 lg:mr-6">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search contacts by name, company, or tag..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="flex items-center bg-white rounded-lg border border-gray-300 p-1">
+                    <button id="cardViewBtn" class="px-3 py-2 rounded-md text-sm font-medium transition-colors bg-black text-white">
+                        <i class="fas fa-th mr-2"></i>Cards
+                    </button>
+                    <button id="tableViewBtn" class="px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-black">
+                        <i class="fas fa-list mr-2"></i>Table
+                    </button>
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <select id="priorityFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        <option value="">All Priorities</option>
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                    
+                    <select id="tagFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        <option value="">All Tags</option>
+                    </select>
+                    
+                    <!-- Import/Export Buttons -->
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                        <button id="importBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-upload mr-2"></i>Import CSV
+                        </button>
+                        <button id="exportBtn" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="mt-6 flex flex-wrap items-center space-x-6 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-red-600 rounded mr-2"></div>
+                    <span>High: <span id="highCount">0</span></span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
+                    <span>Medium: <span id="mediumCount">0</span></span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-blue-600 rounded mr-2"></div>
+                    <span>Low: <span id="lowCount">0</span></span>
+                </div>
+                <div class="border-l pl-6 ml-6">
+                    <span>Total Contacts: <span id="totalCount">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts Grid View -->
+        <div id="contactsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Contacts will be dynamically inserted here -->
+        </div>
+
+        <!-- Contacts Table View -->
+        <div id="contactsTable" class="hidden bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Info</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contactsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-16 hidden">
+            <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-700 mb-2">No Contacts Yet</h3>
+            <p class="text-gray-500 mb-6">Start building your priority contact list by adding your first contact.</p>
+            <button class="addContactBtn bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Add Your First Contact
+            </button>
+        </div>
+    </main>
+
+    <!-- Add/Edit Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 id="modalTitle" class="text-2xl font-bold">Add New Contact</h2>
+                    <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="contactForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                            <input type="text" id="contactName" required 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                            <input type="text" id="contactCompany" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="contactEmail" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" id="contactPhone" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level *</label>
+                        <select id="contactPriority" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black">
+                            <option value="">Select Priority</option>
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                        <textarea id="contactNotes" rows="4" 
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                                  placeholder="Add any notes or comments about this contact..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                        <input type="text" id="contactTags" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                               placeholder="Enter tags separated by commas (e.g., client, prospect, partner)">
+                        <p class="text-sm text-gray-500 mt-1">Separate multiple tags with commas</p>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <button type="button" id="cancelBtn" class="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" id="saveBtn" class="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Save Contact
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Deals Modal -->
+    <div id="completedDealsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-trophy text-3xl text-green-600"></i>
+                        <h2 class="text-3xl font-bold text-gray-900">Completed Deals</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="exportCompletedBtn" class="bg-green-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-800 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Export CSV
+                        </button>
+                        <button id="clearAllCompletedBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Clear All
+                        </button>
+                        <button id="closeCompletedModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Completed Deals Stats -->
+                <div class="bg-green-50 p-4 rounded-lg mb-6">
+                    <div class="flex flex-wrap items-center space-x-6 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                            <span class="text-green-800">Total Completed: <span id="completedTotalCount" class="font-bold">0</span></span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-red-600 rounded mr-2"></div>
+                            <span class="text-gray-700">High: <span id="completedHighCount">0</span></span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
+                            <span class="text-gray-700">Medium: <span id="completedMediumCount">0</span></span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-blue-600 rounded mr-2"></div>
+                            <span class="text-gray-700">Low: <span id="completedLowCount">0</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Completed Deals Content -->
+                <div id="completedDealsContent">
+                    <!-- Completed contacts will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Focus Mode Modal -->
+    <div id="focusModeModal" class="fixed inset-0 focus-mode-overlay flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-bullseye text-3xl"></i>
+                        <h2 class="text-3xl font-bold">Focus Mode</h2>
+                    </div>
+                    <button id="exitFocusBtn" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="focusContent">
+                    <!-- Focus mode content will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for CSV Import -->
+    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
