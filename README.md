@@ -110,8 +110,8 @@ Traditional CRMs are complex, cloud-dependent, and often overwhelming. Priority 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/priority-crm.git
-   cd priority-crm
+   git clone https://github.com/Hardik-369/Priority-CRM.git
+   cd Priority-CRM
    ```
 
 2. **Start a local server**
@@ -562,5 +562,6 @@ SOFTWARE.
 ---
 
 *Priority CRM - Transform your contact management workflow with intelligent focus modes.*
+
 
 </div>
